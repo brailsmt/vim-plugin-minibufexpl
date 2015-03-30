@@ -1624,7 +1624,7 @@ function! <SID>CreateBufferUniqName(bufNum)
 
     for l:sign in l:signs
         call <SID>DEBUG('l:sign is ' . l:sign,5)
-        if empty(get(s:bufPathDict[l:bufNum],l:sign))
+        if !has_key(s:bufPathDict, l:bufNum) || empty(get(s:bufPathDict[l:bufNum],l:sign))
             continue
         endif
         let l:bufPathSignPart = get(s:bufPathDict[l:bufNum],l:sign).'/'
@@ -1638,8 +1638,10 @@ function! <SID>CreateBufferUniqName(bufNum)
     endfor
     " If the last signature index is not the last index of the path, then put
     " a '-' after it
-    if l:sign < len(s:bufPathDict[l:bufNum]) - 1
-        let l:bufPathPrefix = l:bufPathPrefix.'-/'
+    if has_key(s:bufPathDict, l:bufNum) && l:sign < len(s:bufPathDict[l:bufNum]) - 1
+      let l:bufPathPrefix = l:bufPathPrefix.'-/'
+    else
+      let l:bufPathPrefix = ''
     endif
 
     call <SID>DEBUG('Uniq name for ' . l:bufNum . ' is ' .  l:bufPathPrefix.l:bufName,5)
@@ -1755,6 +1757,10 @@ function! <SID>BuildBufferPathSignDict(bufnrs, ...)
         " If index is zero, we force re-initialize the entry
         if index == 0 || !has_key(s:bufPathSignDict, bufnr)
             let s:bufPathSignDict[bufnr] = []
+        endif
+
+        if !has_key(s:bufPathDict, bufnr)
+          continue
         endif
 
         " If some buffers' path does not have this index, we skip it
